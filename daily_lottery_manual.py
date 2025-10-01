@@ -55,7 +55,7 @@ async def fetch_participants(date_str: str, n: int, min_msg: int):
     winners_info = []
     for uid in winners:
         user = await client.get_entity(uid)
-        winners_info.append(user.first_name or user.username or str(uid))
+        winners_info.append(user)
 
     return winners_info, user_counts
 
@@ -87,10 +87,20 @@ async def lottery_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         pool_msg = f"📋 {date_str} 奖池名单 (至少 {min_msg} 条消息):\n" + "\n".join(f"- {p}" for p in pool_info)
 
-        # 抽奖结果
-        result_msg = "🎉 抽奖结果：\n" + "\n".join(f"- {w}" for w in winners)
+        # 抽奖结果（可点击 @）
+        result_lines = []
+        for user in winners:
+            name = user.first_name or user.username or str(user.id)
+            mention = f"<a href='tg://user?id={user.id}'>{name}</a>"
+            result_lines.append(f"- {mention}")
 
-        await update.message.reply_text(pool_msg + "\n\n" + result_msg)
+        result_msg = "🎉 抽奖结果：\n" + "\n".join(result_lines)
+
+        final_msg = pool_msg + "\n\n" + result_msg
+
+        print(final_msg)
+
+        await update.message.reply_text(final_msg, parse_mode="HTML")
 
 
 async def send_startup_message(app: Application):
