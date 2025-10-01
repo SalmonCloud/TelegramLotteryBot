@@ -12,7 +12,7 @@ load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 API_ID = int(os.getenv("API_ID"))
 API_HASH = os.getenv("API_HASH")
-GROUP_ID = int(os.getenv("AZIHAIMO_ID"))  # -100 开头的超级群 ID
+GROUP_ID = int(os.getenv("SALMONCLOUD_GROUP_ID"))  # -100 开头的超级群 ID
 EXCLUDE_IDS = set(int(x) for x in os.getenv("EXCLUDE_IDS", "").split(",") if x.strip())
 
 tz = pytz.timezone("Asia/Shanghai")
@@ -82,7 +82,7 @@ async def lottery_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             for uid, count in stats.items():
                 if count >= min_msg:
                     user = await client.get_entity(uid)
-                    name = user.first_name or user.username or str(uid)
+                    name = getattr(user, "username", None) or getattr(user, "title", None) or str(uid)
                     pool_info.append(f"{name} ({count}条消息)")
 
         pool_msg = f"📋 {date_str} 奖池名单 (至少 {min_msg} 条消息):\n" + "\n".join(f"- {p}" for p in pool_info)
@@ -90,7 +90,7 @@ async def lottery_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # 抽奖结果（可点击 @）
         result_lines = []
         for user in winners:
-            name = user.first_name or user.username or str(user.id)
+            name = getattr(user, "username", None) or getattr(user, "title", None) or str(user.id)
             mention = f"<a href='tg://user?id={user.id}'>{name}</a>"
             result_lines.append(f"- {mention}")
 
