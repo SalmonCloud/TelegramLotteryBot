@@ -2,3 +2,9 @@
 .env
 telegram_lottery_env/
 *.session
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd

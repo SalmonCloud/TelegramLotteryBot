@@ -12,7 +12,7 @@ load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 API_ID = int(os.getenv("API_ID"))
 API_HASH = os.getenv("API_HASH")
-GROUP_ID = int(os.getenv("SALMONCLOUD_GROUP_ID"))  # -100 开头的超级群 ID
+GROUP_ID = int(os.getenv("AZIHAIMO_ID"))  # -100 开头的超级群 ID
 EXCLUDE_IDS = set(int(x) for x in os.getenv("EXCLUDE_IDS", "").split(",") if x.strip())
 
 tz = pytz.timezone("Asia/Shanghai")
@@ -60,6 +60,30 @@ async def fetch_participants(date_str: str, n: int, min_msg: int):
     return winners_info, user_counts
 
 
+async def fetch_group_members():
+    """返回当前群组中可参与抽奖的成员列表（去除机器人与 EXCLUDE_IDS）"""
+    members = []
+    async with client:
+        async for user in client.iter_participants(GROUP_ID):
+            # 跳过机器人与排除名单
+            if getattr(user, "bot", False):
+                continue
+            if user.id in EXCLUDE_IDS:
+                continue
+            members.append(user)
+            print(f"{getattr(user, "username", None)} : {getattr(user, "id", None)}")
+    return members
+
+
+def display_name(user):
+    """生成一个可读名字（没有用户名时用姓名 / ID）"""
+    name = getattr(user, "username", None)
+    if name:
+        return name
+    else:
+        return str(user.id)
+
+
 async def lottery_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """命令触发: /lottery 2025/09/27 3 2"""
     try:
@@ -103,15 +127,56 @@ async def lottery_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(final_msg, parse_mode="HTML")
 
 
+# 抽群组里的所有人，除了 bot 和排除名单
+async def lottery_all_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """命令触发: /lottery_all N   （N 为要抽的人数）"""
+    try:
+        n = int(context.args[0])
+    except (IndexError, ValueError):
+        await update.message.reply_text("用法: /lottery_all N\n示例：/lottery_all 3")
+        return
+
+    # 拉取可抽奖成员
+    members = await fetch_group_members()
+    total = len(members)
+    if total == 0:
+        await update.message.reply_text("当前群暂未获取到可参与抽奖的成员。")
+        return
+
+    if n > total:
+        n = total  # 保护：请求人数大于奖池人数时，改为全员中奖
+        await update.message.reply_text(f"群组成员数量不足奖品数，奖品改为 {n} 份\n\n")
+
+    winners = random.sample(members, n)
+
+    # 结果信息（可点 @ 的 mention）
+    result_lines = []
+    for user in winners:
+        name = display_name(user)
+        mention = f"<a href='tg://user?id={user.id}'>{name}</a>"
+        result_lines.append(f"- {mention}")
+
+    final_msg = (
+        "🎉 全员抽奖（无需发言门槛）\n"
+        f"参与人数（去除 bot 和 SalmonCloud 管理员）：{total}\n"
+        f"中奖人数：{n}\n\n"
+        "🏆 中奖结果：\n" + "\n".join(result_lines)
+    )
+
+    await update.message.reply_text(final_msg, parse_mode="HTML")
+
+
+
 async def send_startup_message(app: Application):
     """Bot 启动时发提示"""
     help_text = (
         "🤖 抽奖机器人已启动！\n\n"
         "使用方法：\n"
-        "/lottery YYYY/MM/DD N minMessage\n\n"
-        "例如：\n"
+        "/lottery YYYY/MM/DD N minMessage  —— 在某天发言≥minMessage 的成员中抽 N 人\n"
+        "/lottery_all N                    —— 在当前群所有成员中直接抽 N 人\n\n"
+        "示例：\n"
         "/lottery 2025/09/27 3 2\n"
-        "表示在 2025/09/27 当天，从发言不少于 2 条的成员中抽 3 人。"
+        "/lottery_all 3"
     )
     await app.bot.send_message(chat_id=GROUP_ID, text=help_text)
 
@@ -129,9 +194,10 @@ def main():
     )
 
     app.add_handler(CommandHandler("lottery", lottery_command))
+    app.add_handler(CommandHandler("lottery_all", lottery_all_command))
     app.add_handler(CommandHandler("help", help_command))
 
-    print("Bot 已启动，使用 /lottery YYYY/MM/DD N minMessage 触发抽奖")
+    print("Bot 已启动")
     app.run_polling()
 
 
