@@ -100,16 +100,11 @@ async def lottery_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not winners:
         await update.message.reply_text(f"{date_str} 没有人满足条件 (至少 {min_msg} 条消息)。")
     else:
-        # 打印奖池名单
-        pool_info = []
-        async with client:
-            for uid, count in stats.items():
-                if count >= min_msg:
-                    user = await client.get_entity(uid)
-                    name = getattr(user, "username", None) or getattr(user, "title", None) or str(uid)
-                    pool_info.append(f"{name} ({count}条消息)")
-
-        pool_msg = f"📋 {date_str} 奖池名单 (至少 {min_msg} 条消息):\n" + "\n".join(f"- {p}" for p in pool_info)
+        # 不再打印所有符合条件的用户名单，仅展示符合条件的人数
+        eligible_count = sum(1 for _, count in stats.items() if count >= min_msg)
+        pool_msg = (
+            f"📋 {date_str} 当天满足发言条件的人数：{eligible_count}（至少 {min_msg} 条消息）"
+        )
 
         # 抽奖结果（可点击 @）
         result_lines = []
