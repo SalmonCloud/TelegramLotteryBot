@@ -71,7 +71,7 @@ async def fetch_group_members():
             if user.id in EXCLUDE_IDS:
                 continue
             members.append(user)
-            print(f"{getattr(user, "username", None)} : {getattr(user, "id", None)}")
+            print(f"{getattr(user, 'username', None)} : {getattr(user, "id", None)}")
     return members
 
 
