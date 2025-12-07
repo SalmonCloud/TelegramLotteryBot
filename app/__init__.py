@@ -1,0 +1,1 @@
+# LotteryBot package initializer

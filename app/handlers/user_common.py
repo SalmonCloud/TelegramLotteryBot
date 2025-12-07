@@ -1,0 +1,102 @@
+from aiogram import Dispatcher, F
+from aiogram.filters import Command
+from aiogram.types import Message
+
+from app.config import Config
+from app.services.checkin_service import CheckinService
+from app.services.prize_service import PrizeService
+from app.services.settings_service import SettingsService
+from app.services.lottery_service import LotteryService
+from app.services.announce_service import AnnounceService
+from app.texts import zh_cn
+
+ADMIN_COMMAND_PREFIXES = (
+    "/weekly_lottery_pause",
+    "/weekly_lottery_resume",
+    "/draw_now_weekly",
+    "/cleanup_checkins",
+    "/stats_today",
+    "/stats_week",
+    "/show_weekly_prizes",
+    "/admin_ping",
+)
+
+
+def register_user_common_handlers(dp: Dispatcher, config: Config) -> None:
+    dp.message.register(cmd_ping, Command("ping", ignore_mention=True), F.chat.id == config.target_chat_id)
+    dp.message.register(cmd_check_checkin, Command("check_checkin", ignore_mention=True), F.chat.id == config.target_chat_id)
+    dp.message.register(cmd_lottery_info, Command("lottery_info", ignore_mention=True), F.chat.id == config.target_chat_id)
+    dp.message.register(cmd_last_weekly_lottery_result, Command("last_weekly_lottery_result", ignore_mention=True), F.chat.id == config.target_chat_id)
+    dp.message.register(
+        cmd_unknown_command,
+        F.text.startswith("/"),
+        ~F.text.startswith(ADMIN_COMMAND_PREFIXES),
+        F.chat.id == config.target_chat_id,
+    )
+
+
+async def cmd_check_checkin(message: Message, checkin_service: CheckinService):
+    status = await checkin_service.get_checkin_status_for_user(
+        chat_id=message.chat.id,
+        user_id=message.from_user.id,
+        now=message.date,
+    )
+    if status.today_checked:
+        text = zh_cn.TEXT_CHECKIN_SUCCESS.format(
+            date=status.checkin_date,
+            week_count=status.week_checkin_count,
+        )
+    else:
+        text = zh_cn.TEXT_CHECKIN_NOT_FOUND.format(
+            date=status.checkin_date,
+            week_count=status.week_checkin_count,
+        )
+    await message.answer(text)
+
+
+async def cmd_lottery_info(message: Message, settings_service: SettingsService, prize_service: PrizeService):
+    settings = await settings_service.get_settings(chat_id=message.chat.id)
+    weekly_enabled = bool(settings.get("weekly_enabled"))
+    if not weekly_enabled:
+        await message.answer(zh_cn.TEXT_WEEKLY_LOTTERY_DISABLED)
+        return
+
+    weekly_prizes = await prize_service.get_current_prizes(message.chat.id, "weekly")
+    prize_lines = zh_cn.render_prize_list("", weekly_prizes)
+    prize_total = sum(int(p.get("quantity", 1)) for p in weekly_prizes) if weekly_prizes else 0
+    full_factor = int(settings.get("full_attendance_factor", 2) or 2)
+    weight_note = f"⚖️ 权重：当周打卡天数，满勤（7天）权重再 ×{full_factor}"
+    text = zh_cn.TEXT_LOTTERY_INFO.format(
+        status="进行中" if weekly_enabled else "暂停",
+        weekly_draw_at=settings.get("weekly_draw_at"),
+        prize_lines=prize_lines if prize_lines.strip() else "暂无奖品",
+        prize_total=prize_total,
+        weight_note=weight_note,
+    )
+    await message.answer(text)
+
+
+async def cmd_last_weekly_lottery_result(message: Message, lottery_service: LotteryService, announce_service: AnnounceService):
+    result = await lottery_service.get_last_weekly_result(message.chat.id, message.date)
+    if not result:
+        await message.answer(zh_cn.TEXT_LAST_WEEKLY_RESULT_NOT_FOUND)
+        return
+    await announce_service.send_weekly_lottery_result(message.chat.id, result)
+
+
+async def cmd_unknown_command(message: Message):
+    try:
+        await message.answer(f"命令已收到：{message.text}\nchat_id={message.chat.id}")
+    except Exception as e:
+        import logging
+
+        logging.exception("Failed to reply unknown command: %s", e)
+
+
+async def cmd_ping(message: Message):
+    try:
+        await message.answer("pong")
+    except Exception as e:
+        import logging
+
+        logging.exception("Failed to reply ping: %s", e)

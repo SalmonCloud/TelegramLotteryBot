@@ -12,7 +12,7 @@ load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 API_ID = int(os.getenv("API_ID"))
 API_HASH = os.getenv("API_HASH")
-GROUP_ID = int(os.getenv("AZIHAIMO_ID"))  # -100 开头的超级群 ID
+GROUP_ID = int(os.getenv("SALMONCLOUD_GROUP_ID"))  # -100 开头的超级群 ID
 EXCLUDE_IDS = set(int(x) for x in os.getenv("EXCLUDE_IDS", "").split(",") if x.strip())
 
 tz = pytz.timezone("Asia/Shanghai")
