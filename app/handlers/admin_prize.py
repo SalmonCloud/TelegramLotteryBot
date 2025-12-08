@@ -11,21 +11,11 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-ADMIN_PRIZE_PREFIXES = (
-    "/show_weekly_prizes",
-)
-
 
 def register_admin_prize_handlers(dp: Dispatcher, config: Config) -> None:
     dp.message.register(
         cmd_show_weekly_prizes,
         Command("show_weekly_prizes", ignore_mention=False),
-        F.chat.id == config.target_chat_id,
-    )
-    # fallback admin command handler for prize-related commands
-    dp.message.register(
-        cmd_admin_unknown,
-        F.text.startswith(ADMIN_PRIZE_PREFIXES),
         F.chat.id == config.target_chat_id,
     )
 
@@ -51,9 +41,3 @@ async def cmd_show_weekly_prizes(message: Message, prize_service: PrizeService, 
         lines.append("（当前奖池仍保留，恢复后生效）")
     lines.append(zh_cn.render_prize_list("Weekly 奖池", prizes))
     await message.answer("\n".join(lines))
-
-
-async def cmd_admin_unknown(message: Message):
-    if not await _ensure_admin(message):
-        return
-    await message.answer(f"管理员命令已收到：{message.text}")

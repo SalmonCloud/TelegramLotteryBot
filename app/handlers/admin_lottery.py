@@ -14,19 +14,11 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-ADMIN_LOTTERY_PREFIXES = (
-    "/weekly_lottery_pause",
-    "/weekly_lottery_resume",
-    "/draw_now_weekly",
-)
-
 
 def register_admin_lottery_handlers(dp: Dispatcher, config: Config) -> None:
     dp.message.register(cmd_weekly_lottery_pause, Command("weekly_lottery_pause", ignore_mention=False), F.chat.id == config.target_chat_id)
     dp.message.register(cmd_weekly_lottery_resume, Command("weekly_lottery_resume", ignore_mention=False), F.chat.id == config.target_chat_id)
     dp.message.register(cmd_draw_now_weekly, Command("draw_now_weekly", ignore_mention=False), F.chat.id == config.target_chat_id)
-    # Only fallback for lottery-related admin命令，避免抢占其他管理员命令
-    dp.message.register(cmd_admin_lottery_unknown, F.text.startswith(ADMIN_LOTTERY_PREFIXES), F.chat.id == config.target_chat_id)
 
 
 async def _ensure_admin(message: Message) -> bool:
@@ -75,13 +67,6 @@ async def cmd_draw_now_weekly(message: Message, lottery_service: LotteryService,
         return
     result = await lottery_service.run_weekly_lottery(message.chat.id, message.date)
     if result.round_id and result.total_participants == 0 and not result.winners:
-        # run_weekly_lottery would have raised if no participants; here we treat returned result as valid
-        await message.answer("暂无有效参与，未开奖。")
+        await message.answer("暂时没有有效参与者，未开奖。")
         return
     await announce_service.send_weekly_lottery_result(message.chat.id, result)
-
-
-async def cmd_admin_lottery_unknown(message: Message):
-    if not await _ensure_admin(message):
-        return
-    await message.answer(f"管理员命令已收到：{message.text}")

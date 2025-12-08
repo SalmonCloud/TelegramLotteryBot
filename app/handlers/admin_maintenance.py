@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 import logging
 
 from aiogram import Dispatcher, F
@@ -14,20 +14,12 @@ from app.utils import time_utils
 
 logger = logging.getLogger(__name__)
 
-ADMIN_MAINT_PREFIXES = (
-    "/cleanup_checkins",
-    "/stats_today",
-    "/stats_week",
-    "/admin_ping",
-)
-
 
 def register_admin_maintenance_handlers(dp: Dispatcher, config: Config) -> None:
     dp.message.register(cmd_cleanup_checkins, Command("cleanup_checkins", ignore_mention=False), F.chat.id == config.target_chat_id)
     dp.message.register(cmd_stats_today, Command("stats_today", ignore_mention=False), F.chat.id == config.target_chat_id)
     dp.message.register(cmd_stats_week, Command("stats_week", ignore_mention=False), F.chat.id == config.target_chat_id)
     dp.message.register(cmd_admin_ping, Command("admin_ping", ignore_mention=False), F.chat.id == config.target_chat_id)
-    dp.message.register(cmd_admin_maintenance_unknown, F.text.startswith(ADMIN_MAINT_PREFIXES), F.chat.id == config.target_chat_id)
 
 
 async def _ensure_admin(message: Message) -> bool:
@@ -75,15 +67,6 @@ async def cmd_stats_week(message: Message, stats_service: StatsService):
     for d in data["days"]:
         lines.append(f"{d['date']}: {d['user_count']} 人")
     await message.answer("\n".join(lines))
-
-
-async def cmd_admin_maintenance_unknown(message: Message):
-    if not await _ensure_admin(message):
-        return
-    try:
-        await message.answer(f"管理员命令已收到：{message.text}")
-    except Exception as e:
-        logger.exception("Failed to reply admin unknown: %s", e)
 
 
 async def cmd_admin_ping(message: Message):
