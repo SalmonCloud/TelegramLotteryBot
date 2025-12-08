@@ -9,6 +9,7 @@ from app.services.settings_service import SettingsService
 from app.services.lottery_service import LotteryService
 from app.services.announce_service import AnnounceService
 from app.texts import zh_cn
+from app.utils import time_utils
 
 ADMIN_COMMAND_PREFIXES = (
     "/weekly_lottery_pause",
@@ -38,18 +39,34 @@ async def cmd_checkin_status(message: Message, checkin_service: CheckinService):
         now=message.date,
     )
     if status.today_checked:
-        text = f"✅ 今日已打卡（{status.checkin_date}），本周累计 {status.week_checkin_count} 天。"
+        text = zh_cn.TEXT_CHECKIN_SUCCESS.format(
+            date=status.checkin_date,
+            week_count=status.week_checkin_count,
+        )
     else:
-        text = f"⚠️ 今日尚未打卡（{status.checkin_date}），本周累计 {status.week_checkin_count} 天。"
-    await message.answer(text)
+        text = zh_cn.TEXT_CHECKIN_NOT_FOUND.format(
+            date=status.checkin_date,
+            week_count=status.week_checkin_count,
+        )
+    await message.reply(text)
 
 
-async def cmd_lottery_info(message: Message, settings_service: SettingsService, prize_service: PrizeService):
+async def cmd_lottery_info(
+    message: Message,
+    settings_service: SettingsService,
+    prize_service: PrizeService,
+    checkin_service: CheckinService,
+):
     settings = await settings_service.get_settings(chat_id=message.chat.id)
     weekly_enabled = bool(settings.get("weekly_enabled"))
     if not weekly_enabled:
         await message.answer(zh_cn.TEXT_WEEKLY_LOTTERY_DISABLED)
         return
+
+    today = time_utils.get_today_beijing(message.date)
+    week_start, week_end = time_utils.get_week_start_end(today)
+    checkin_map = await checkin_service.get_weekly_checkin_map(message.chat.id, week_start, week_end)
+    qualified_count = len(checkin_map or {})
 
     weekly_prizes = await prize_service.get_current_prizes(message.chat.id, "weekly")
     prize_lines = zh_cn.render_prize_list("", weekly_prizes)
@@ -61,6 +78,7 @@ async def cmd_lottery_info(message: Message, settings_service: SettingsService, 
         weekly_draw_at=settings.get("weekly_draw_at"),
         prize_lines=prize_lines if prize_lines.strip() else "暂无奖品",
         prize_total=prize_total,
+        qualified_count=qualified_count,
         weight_note=weight_note,
     )
     await message.answer(text)
@@ -84,8 +102,8 @@ def _help_text() -> str:
         "• /last_weekly_lottery_result - 查看上一期周抽奖结果\n"
         "------\n"
         "抽奖规则概要\n"
-        "• 在群内至少发送一条任意非命令消息即完成当日打卡\n"
-        "• 打卡越多权重越高，满勤 7 天权重×{full_factor}\n"
+        "• 在群内至少发送一条任意非命令消息即可完成当日打卡\n"
+        "• 打卡越多权重越高，满勤7天权重×{full_factor}\n"
         "• 每周抽奖时间：{weekly_draw_at}（北京时间）\n"
         "• 管理员可随时暂停/恢复周抽奖\n"
     )

@@ -1,5 +1,5 @@
 TEXT_CHECKIN_SUCCESS = "✅ 已打卡：{date}，本周累计 {week_count} 天，加油保持！"
-TEXT_CHECKIN_NOT_FOUND = "⚠️ 今日尚未打卡（{date}），本周累计 {week_count} 天，快发一条消息完成打卡吧。"
+TEXT_CHECKIN_NOT_FOUND = "⚠️ 今日尚未打卡（{date}），本周累计 {week_count} 天，快发一条消息完成打卡吧！"
 TEXT_DAILY_STATS = "昨日（{date}）共有 {user_count} 人打卡。"
 TEXT_WEEKLY_LOTTERY_HEADER = "周抽奖结果\n周期：{period}\n参与人数：{participants}\n总权重：{tickets}"
 TEXT_LOTTERY_INFO = (
@@ -8,6 +8,7 @@ TEXT_LOTTERY_INFO = (
     "🕒 抽奖时间：{weekly_draw_at} (北京时间)\n"
     "🎁 奖池：\n{prize_lines}\n"
     "📦 奖品总数：{prize_total} 个\n"
+    "👥 已具备抽奖资格人数：{qualified_count} 人\n"
     "------\n"
     "打卡抽奖规则如下：\n"
     "💡 发送任意非命令消息即可完成今日打卡\n"
