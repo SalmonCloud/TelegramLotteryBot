@@ -27,12 +27,6 @@ def register_user_common_handlers(dp: Dispatcher, config: Config) -> None:
     dp.message.register(cmd_check_checkin, Command("check_checkin", ignore_mention=True), F.chat.id == config.target_chat_id)
     dp.message.register(cmd_lottery_info, Command("lottery_info", ignore_mention=True), F.chat.id == config.target_chat_id)
     dp.message.register(cmd_last_weekly_lottery_result, Command("last_weekly_lottery_result", ignore_mention=True), F.chat.id == config.target_chat_id)
-    dp.message.register(
-        cmd_unknown_command,
-        F.text.startswith("/"),
-        ~F.text.startswith(ADMIN_COMMAND_PREFIXES),
-        F.chat.id == config.target_chat_id,
-    )
 
 
 async def cmd_check_checkin(message: Message, checkin_service: CheckinService):
@@ -65,7 +59,7 @@ async def cmd_lottery_info(message: Message, settings_service: SettingsService, 
     prize_lines = zh_cn.render_prize_list("", weekly_prizes)
     prize_total = sum(int(p.get("quantity", 1)) for p in weekly_prizes) if weekly_prizes else 0
     full_factor = int(settings.get("full_attendance_factor", 2) or 2)
-    weight_note = f"⚖️ 权重：当周打卡天数，满勤（7天）权重再 ×{full_factor}"
+    weight_note = f"🎯 权重：当周打卡天数（满勤 7 天权重 ×{full_factor}）"
     text = zh_cn.TEXT_LOTTERY_INFO.format(
         status="进行中" if weekly_enabled else "暂停",
         weekly_draw_at=settings.get("weekly_draw_at"),
@@ -82,15 +76,6 @@ async def cmd_last_weekly_lottery_result(message: Message, lottery_service: Lott
         await message.answer(zh_cn.TEXT_LAST_WEEKLY_RESULT_NOT_FOUND)
         return
     await announce_service.send_weekly_lottery_result(message.chat.id, result)
-
-
-async def cmd_unknown_command(message: Message):
-    try:
-        await message.answer(f"命令已收到：{message.text}\nchat_id={message.chat.id}")
-    except Exception as e:
-        import logging
-
-        logging.exception("Failed to reply unknown command: %s", e)
 
 
 async def cmd_ping(message: Message):
