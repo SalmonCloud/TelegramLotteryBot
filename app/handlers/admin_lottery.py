@@ -22,9 +22,9 @@ ADMIN_LOTTERY_PREFIXES = (
 
 
 def register_admin_lottery_handlers(dp: Dispatcher, config: Config) -> None:
-    dp.message.register(cmd_weekly_lottery_pause, Command("weekly_lottery_pause", ignore_mention=True), F.chat.id == config.target_chat_id)
-    dp.message.register(cmd_weekly_lottery_resume, Command("weekly_lottery_resume", ignore_mention=True), F.chat.id == config.target_chat_id)
-    dp.message.register(cmd_draw_now_weekly, Command("draw_now_weekly", ignore_mention=True), F.chat.id == config.target_chat_id)
+    dp.message.register(cmd_weekly_lottery_pause, Command("weekly_lottery_pause", ignore_mention=False), F.chat.id == config.target_chat_id)
+    dp.message.register(cmd_weekly_lottery_resume, Command("weekly_lottery_resume", ignore_mention=False), F.chat.id == config.target_chat_id)
+    dp.message.register(cmd_draw_now_weekly, Command("draw_now_weekly", ignore_mention=False), F.chat.id == config.target_chat_id)
     # Only fallback for lottery-related admin命令，避免抢占其他管理员命令
     dp.message.register(cmd_admin_lottery_unknown, F.text.startswith(ADMIN_LOTTERY_PREFIXES), F.chat.id == config.target_chat_id)
 

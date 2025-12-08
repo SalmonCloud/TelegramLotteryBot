@@ -23,10 +23,10 @@ ADMIN_MAINT_PREFIXES = (
 
 
 def register_admin_maintenance_handlers(dp: Dispatcher, config: Config) -> None:
-    dp.message.register(cmd_cleanup_checkins, Command("cleanup_checkins", ignore_mention=True), F.chat.id == config.target_chat_id)
-    dp.message.register(cmd_stats_today, Command("stats_today", ignore_mention=True), F.chat.id == config.target_chat_id)
-    dp.message.register(cmd_stats_week, Command("stats_week", ignore_mention=True), F.chat.id == config.target_chat_id)
-    dp.message.register(cmd_admin_ping, Command("admin_ping", ignore_mention=True), F.chat.id == config.target_chat_id)
+    dp.message.register(cmd_cleanup_checkins, Command("cleanup_checkins", ignore_mention=False), F.chat.id == config.target_chat_id)
+    dp.message.register(cmd_stats_today, Command("stats_today", ignore_mention=False), F.chat.id == config.target_chat_id)
+    dp.message.register(cmd_stats_week, Command("stats_week", ignore_mention=False), F.chat.id == config.target_chat_id)
+    dp.message.register(cmd_admin_ping, Command("admin_ping", ignore_mention=False), F.chat.id == config.target_chat_id)
     dp.message.register(cmd_admin_maintenance_unknown, F.text.startswith(ADMIN_MAINT_PREFIXES), F.chat.id == config.target_chat_id)
 
 

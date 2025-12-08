@@ -19,7 +19,7 @@ ADMIN_PRIZE_PREFIXES = (
 def register_admin_prize_handlers(dp: Dispatcher, config: Config) -> None:
     dp.message.register(
         cmd_show_weekly_prizes,
-        Command("show_weekly_prizes", ignore_mention=True),
+        Command("show_weekly_prizes", ignore_mention=False),
         F.chat.id == config.target_chat_id,
     )
     # fallback admin command handler for prize-related commands

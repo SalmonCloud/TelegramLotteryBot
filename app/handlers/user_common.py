@@ -23,12 +23,12 @@ ADMIN_COMMAND_PREFIXES = (
 
 
 def register_user_common_handlers(dp: Dispatcher, config: Config) -> None:
-    dp.message.register(cmd_ping, Command("ping", ignore_mention=True), F.chat.id == config.target_chat_id)
-    dp.message.register(cmd_checkin_status, Command("checkin_status", ignore_mention=True), F.chat.id == config.target_chat_id)
-    dp.message.register(cmd_lottery_info, Command("lottery_info", ignore_mention=True), F.chat.id == config.target_chat_id)
-    dp.message.register(cmd_last_weekly_lottery_result, Command("last_weekly_lottery_result", ignore_mention=True), F.chat.id == config.target_chat_id)
-    dp.message.register(cmd_help, Command("help", ignore_mention=True), F.chat.id == config.target_chat_id)
-    dp.message.register(cmd_start, Command("start", ignore_mention=True), F.chat.id == config.target_chat_id)
+    dp.message.register(cmd_ping, Command("ping", ignore_mention=False), F.chat.id == config.target_chat_id)
+    dp.message.register(cmd_checkin_status, Command("checkin_status", ignore_mention=False), F.chat.id == config.target_chat_id)
+    dp.message.register(cmd_lottery_info, Command("lottery_info", ignore_mention=False), F.chat.id == config.target_chat_id)
+    dp.message.register(cmd_last_weekly_lottery_result, Command("last_weekly_lottery_result", ignore_mention=False), F.chat.id == config.target_chat_id)
+    dp.message.register(cmd_help, Command("help", ignore_mention=False), F.chat.id == config.target_chat_id)
+    dp.message.register(cmd_start, Command("start", ignore_mention=False), F.chat.id == config.target_chat_id)
 
 
 async def cmd_checkin_status(message: Message, checkin_service: CheckinService):
