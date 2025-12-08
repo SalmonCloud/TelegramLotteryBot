@@ -24,29 +24,23 @@ ADMIN_COMMAND_PREFIXES = (
 
 def register_user_common_handlers(dp: Dispatcher, config: Config) -> None:
     dp.message.register(cmd_ping, Command("ping", ignore_mention=True), F.chat.id == config.target_chat_id)
-    dp.message.register(cmd_check_checkin, Command("check_checkin", ignore_mention=True), F.chat.id == config.target_chat_id)
+    dp.message.register(cmd_checkin_status, Command("checkin_status", ignore_mention=True), F.chat.id == config.target_chat_id)
     dp.message.register(cmd_lottery_info, Command("lottery_info", ignore_mention=True), F.chat.id == config.target_chat_id)
     dp.message.register(cmd_last_weekly_lottery_result, Command("last_weekly_lottery_result", ignore_mention=True), F.chat.id == config.target_chat_id)
     dp.message.register(cmd_help, Command("help", ignore_mention=True), F.chat.id == config.target_chat_id)
     dp.message.register(cmd_start, Command("start", ignore_mention=True), F.chat.id == config.target_chat_id)
 
 
-async def cmd_check_checkin(message: Message, checkin_service: CheckinService):
+async def cmd_checkin_status(message: Message, checkin_service: CheckinService):
     status = await checkin_service.get_checkin_status_for_user(
         chat_id=message.chat.id,
         user_id=message.from_user.id,
         now=message.date,
     )
     if status.today_checked:
-        text = zh_cn.TEXT_CHECKIN_SUCCESS.format(
-            date=status.checkin_date,
-            week_count=status.week_checkin_count,
-        )
+        text = f"✅ 今日已打卡（{status.checkin_date}），本周累计 {status.week_checkin_count} 天。"
     else:
-        text = zh_cn.TEXT_CHECKIN_NOT_FOUND.format(
-            date=status.checkin_date,
-            week_count=status.week_checkin_count,
-        )
+        text = f"⚠️ 今日尚未打卡（{status.checkin_date}），本周累计 {status.week_checkin_count} 天。"
     await message.answer(text)
 
 
@@ -85,7 +79,7 @@ def _help_text() -> str:
         "👋 欢迎使用本群打卡抽奖机器人！\n"
         "------\n"
         "可用命令（用户侧）\n"
-        "• /check_checkin - 查看今日是否已打卡\n"
+        "• /checkin_status - 查看今日是否已打卡与本周累计天数\n"
         "• /lottery_info - 查看本周奖池与规则\n"
         "• /last_weekly_lottery_result - 查看上一期周抽奖结果\n"
         "------\n"

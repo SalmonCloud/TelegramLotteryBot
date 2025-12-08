@@ -29,7 +29,7 @@ async def update_admin_bot_commands(bot: Bot, target_chat_id: int, *, weekly_ena
 async def set_bot_commands(bot: Bot, target_chat_id: int, *, weekly_enabled: bool = True) -> None:
     await bot.set_my_commands(
         commands=[
-            BotCommand(command="check_checkin", description="查询今日/本周打卡"),
+            BotCommand(command="checkin_status", description="查询今日/本周打卡"),
             BotCommand(command="lottery_info", description="抽奖规则与奖池"),
             BotCommand(command="last_weekly_lottery_result", description="查看上一期周抽奖结果"),
         ],
