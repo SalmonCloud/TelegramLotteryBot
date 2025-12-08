@@ -27,6 +27,8 @@ def register_user_common_handlers(dp: Dispatcher, config: Config) -> None:
     dp.message.register(cmd_check_checkin, Command("check_checkin", ignore_mention=True), F.chat.id == config.target_chat_id)
     dp.message.register(cmd_lottery_info, Command("lottery_info", ignore_mention=True), F.chat.id == config.target_chat_id)
     dp.message.register(cmd_last_weekly_lottery_result, Command("last_weekly_lottery_result", ignore_mention=True), F.chat.id == config.target_chat_id)
+    dp.message.register(cmd_help, Command("help", ignore_mention=True), F.chat.id == config.target_chat_id)
+    dp.message.register(cmd_start, Command("start", ignore_mention=True), F.chat.id == config.target_chat_id)
 
 
 async def cmd_check_checkin(message: Message, checkin_service: CheckinService):
@@ -76,6 +78,35 @@ async def cmd_last_weekly_lottery_result(message: Message, lottery_service: Lott
         await message.answer(zh_cn.TEXT_LAST_WEEKLY_RESULT_NOT_FOUND)
         return
     await announce_service.send_weekly_lottery_result(message.chat.id, result)
+
+
+def _help_text() -> str:
+    return (
+        "👋 欢迎使用本群打卡抽奖机器人！\n"
+        "------\n"
+        "可用命令（用户侧）\n"
+        "• /check_checkin - 查看今日是否已打卡\n"
+        "• /lottery_info - 查看本周奖池与规则\n"
+        "• /last_weekly_lottery_result - 查看上一期周抽奖结果\n"
+        "------\n"
+        "抽奖规则概要\n"
+        "• 在群内至少发送一条任意非命令消息即完成当日打卡\n"
+        "• 打卡越多权重越高，满勤 7 天权重×{full_factor}\n"
+        "• 每周抽奖时间：{weekly_draw_at}（北京时间）\n"
+        "• 管理员可随时暂停/恢复周抽奖\n"
+    )
+
+
+async def cmd_help(message: Message, settings_service: SettingsService):
+    settings = await settings_service.get_settings(chat_id=message.chat.id)
+    full_factor = int(settings.get("full_attendance_factor", 2) or 2)
+    weekly_draw_at = settings.get("weekly_draw_at", "00:00")
+    text = _help_text().format(full_factor=full_factor, weekly_draw_at=weekly_draw_at)
+    await message.answer(text)
+
+
+async def cmd_start(message: Message, settings_service: SettingsService):
+    await cmd_help(message, settings_service)
 
 
 async def cmd_ping(message: Message):
