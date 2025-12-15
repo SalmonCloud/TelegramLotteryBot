@@ -77,8 +77,8 @@ class LotteryRepository:
     async def get_round_by_period(self, chat_id: int, round_type: str, period_start: date, period_end: date) -> Optional[Dict]:
         return await queries.get_round_by_period(chat_id, round_type, period_start, period_end)
 
-    async def create_round(self, chat_id: int, round_type: str, period_start_date: date, period_end_date: date, draw_scheduled_at: datetime | None, note: str | None, prize_set_id: int | None) -> int:
-        return await queries.create_lottery_round(chat_id, round_type, period_start_date, period_end_date, draw_scheduled_at, note, prize_set_id)
+    async def create_round(self, chat_id: int, round_type: str, period_start_date: date, period_end_date: date, note: str | None, prize_set_id: int | None) -> int:
+        return await queries.create_lottery_round(chat_id, round_type, period_start_date, period_end_date, note, prize_set_id)
 
     async def complete_round(self, round_id: int, total_participants: int, total_tickets: int) -> None:
         await queries.mark_lottery_round_completed(round_id, total_participants, total_tickets)

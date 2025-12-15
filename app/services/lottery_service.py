@@ -69,7 +69,7 @@ class LotteryService:
                 raise ValueError("No current weekly prize set")
         prize_items = await self.prize_repo.list_prizes_for_set(prize_set["id"])
 
-        round_id = existing["id"] if existing else await self.lottery_repo.create_round(chat_id, "weekly", week_start, week_end, None, None, prize_set["id"])
+        round_id = existing["id"] if existing else await self.lottery_repo.create_round(chat_id, "weekly", week_start, week_end, None, prize_set["id"])
 
         winners = self._draw_winners(entries, prize_items)
 

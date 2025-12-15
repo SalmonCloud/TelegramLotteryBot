@@ -198,12 +198,12 @@ async def update_prize_item_enabled(item_id: int, enabled: bool) -> None:
 
 
 # lottery_rounds
-async def create_lottery_round(chat_id: int, round_type: str, period_start_date: date, period_end_date: date, draw_scheduled_at: datetime | None, note: str | None, prize_set_id: int | None) -> int:
+async def create_lottery_round(chat_id: int, round_type: str, period_start_date: date, period_end_date: date, note: str | None, prize_set_id: int | None) -> int:
     sql = """
-    INSERT INTO lottery_rounds (chat_id, round_type, period_start_date, period_end_date, draw_scheduled_at, status, note, prize_set_id)
-    VALUES (%s, %s, %s, %s, %s, 'running', %s, %s)
+    INSERT INTO lottery_rounds (chat_id, round_type, period_start_date, period_end_date, status, note, prize_set_id)
+    VALUES (%s, %s, %s, %s, 'running', %s, %s)
     """
-    return await _execute(sql, (chat_id, round_type, period_start_date, period_end_date, draw_scheduled_at, note, prize_set_id))
+    return await _execute(sql, (chat_id, round_type, period_start_date, period_end_date, note, prize_set_id))
 
 
 async def mark_lottery_round_completed(round_id: int, total_participants: int, total_tickets: int) -> None:
