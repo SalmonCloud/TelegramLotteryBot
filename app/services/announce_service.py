@@ -23,11 +23,21 @@ class AnnounceService:
             "🏆 中奖名单：",
         ]
         if not result.winners:
-            lines.append("🙈 本期无人中奖")
+            lines.append("😔 本期无人中奖")
         else:
             for w in result.winners:
                 user_tag = await self._format_user(chat_id, w.user_id)
                 lines.append(f"{self._medal_for_rank(w.prize_rank)} #{w.prize_rank} {user_tag} - {w.prize_name}")
+
+        lines.extend(
+            [
+                "━━━━━━━━━━━━",
+                "领奖说明",
+                "1) 直接私聊 @salmoncloudchatbot，发送你的 SalmonCloud 账户邮箱用于领奖；我们会尽快处理，如 12 小时内未发奖请再次提醒。",
+                "2) 领取时限 7 天，逾期无法补领。",
+            ]
+        )
+
         await self.bot.send_message(chat_id=chat_id, text="\n".join(lines))
 
     async def send_new_member_welcome(self, chat_id: int, user_id: int) -> None:
