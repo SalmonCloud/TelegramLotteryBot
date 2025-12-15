@@ -11,6 +11,7 @@ def _build_admin_commands(weekly_enabled: bool):
         BotCommand(command="cleanup_checkins", description="【管理员】清理打卡"),
         BotCommand(command="stats_today", description="【管理员】今日统计"),
         BotCommand(command="stats_week", description="【管理员】本周统计"),
+        BotCommand(command="help", description="查看指令与抽奖规则"),
     ]
     if weekly_enabled:
         commands.append(BotCommand(command="draw_now_weekly", description="【管理员】立即周抽"))
