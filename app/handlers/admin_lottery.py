@@ -22,6 +22,9 @@ def register_admin_lottery_handlers(dp: Dispatcher, config: Config) -> None:
 
 
 async def _ensure_admin(message: Message) -> bool:
+    # Allow anonymous admin mode (sender_chat == current chat) to pass
+    if getattr(message, "sender_chat", None) and message.sender_chat.id == message.chat.id:
+        return True
     is_admin = await is_chat_admin(message.bot, message.chat.id, message.from_user.id)
     logger.info("Admin check chat_id=%s user_id=%s is_admin=%s", message.chat.id, message.from_user.id, is_admin)
     if not is_admin:

@@ -23,6 +23,8 @@ def register_admin_maintenance_handlers(dp: Dispatcher, config: Config) -> None:
 
 
 async def _ensure_admin(message: Message) -> bool:
+    if getattr(message, "sender_chat", None) and message.sender_chat.id == message.chat.id:
+        return True
     if not await is_chat_admin(message.bot, message.chat.id, message.from_user.id):
         await message.answer(zh_cn.TEXT_NOT_ADMIN)
         return False
